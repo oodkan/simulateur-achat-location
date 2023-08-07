@@ -18,7 +18,6 @@ import {
   SimpleGrid,
 } from '@mantine/core';
 import { ResponsiveLine } from '@nivo/line';
-import { ThemeProvider } from './ThemeProvider';
 
 const dureeProjection = 50;
 
@@ -43,6 +42,7 @@ type variablesImmo = {
   TaxeFonciere: number;
   ChargesCopropriete: number;
   EntretienAnnuel: number;
+  DepotGarantie: number;
 };
 
 export function calculer_mensualite_emprunt(
@@ -108,20 +108,21 @@ function calculer_solution_location(st: variablesImmo) {
   const revenus_mensuels =
     mensualite + (st.TaxeFonciere + st.ChargesCopropriete * 12 + st.EntretienAnnuel) / 12;
   let loyer_actuel = st.Loyer;
-  let tresorerie = st.Apport;
+  let tresorerie = st.Apport - st.DepotGarantie * st.Loyer;
   tresorerie *= 1 + st.RetourAutreInvestissement / 100;
-  tresorerie -= (st.FraisAgenceLocation / 100) * st.Loyer * 12; //Frais d'agence à intégrer
+  tresorerie -= st.FraisAgenceLocation; //Frais d'agence à intégrer
   tresorerie -= loyer_actuel * 12;
   tresorerie += revenus_mensuels * 12;
   loyer_actuel *= 1 + st.InflationLoyer / 100;
-
-  tableau_sortie.push({ year: 1, tresorerie, valeur_immobilier: 0, actif_net: tresorerie });
+  let actif_net = tresorerie;
+  tableau_sortie.push({ year: 1, tresorerie, valeur_immobilier: 0, actif_net });
 
   for (let i = 2; i <= dureeProjection; i++) {
     tresorerie = tresorerie - loyer_actuel * 12 + revenus_mensuels * 12;
     tresorerie *= 1 + st.RetourAutreInvestissement / 100;
     loyer_actuel *= 1 + st.InflationLoyer / 100;
-    tableau_sortie.push({ year: i, tresorerie, valeur_immobilier: 0, actif_net: tresorerie });
+    actif_net = tresorerie + st.DepotGarantie * st.Loyer;
+    tableau_sortie.push({ year: i, tresorerie, valeur_immobilier: 0, actif_net });
   }
   return tableau_sortie;
 }
@@ -147,14 +148,12 @@ export function calculer_solution_achat(st: variablesImmo) {
   let valeur_immobilier = st.Prix + st.FraisTravaux;
   valeur_immobilier *= 1 + st.RendementImmobilier / 100;
 
-  situation_globale = {
+  tableau_sortie.push({
     year: 1,
     tresorerie,
     valeur_immobilier,
     actif_net: tresorerie + valeur_immobilier - tab_amortissement[0].capital_restant,
-  };
-
-  tableau_sortie.push(situation_globale);
+  });
 
   //Annnées suivantes
   for (let i = 2; i <= dureeProjection; i++) {
@@ -190,7 +189,7 @@ function NivoLineFromTabSortie({ data }: { data: any }) {
       }}
       enablePoints={false}
       enableGridX={false}
-      yFormat=" >-.0f"
+      yFormat=" >-.3s"
       axisTop={null}
       axisRight={null}
       axisLeft={null}
@@ -200,6 +199,7 @@ function NivoLineFromTabSortie({ data }: { data: any }) {
       pointBorderColor={{ from: 'serieColor' }}
       pointLabelYOffset={-12}
       useMesh
+      enableSlices="x"
       animate={false}
     />
   );
@@ -207,9 +207,13 @@ function NivoLineFromTabSortie({ data }: { data: any }) {
 
 function stateCalcToValue({ stateCalc }: { stateCalc: any }) {
   //Extracts the values from the stateCalc object and returns them in a new object using a loop
-  const value = {};
-  for (const [key, [val, setVal]] of Object.entries(stateCalc)) {
-    value[key] = val;
+  const value: { [key: string]: number } = {};
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [key, val] of Object.entries(stateCalc)) {
+    if (Array.isArray(val) && typeof val[0] === 'number') {
+      value[key] = val[0];
+    }
   }
   //Cast the value object to the type variablesImmo
   return value as variablesImmo;

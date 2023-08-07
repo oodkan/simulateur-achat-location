@@ -1,6 +1,17 @@
 /* eslint-disable linebreak-style */
 import React, { useState } from 'react';
-import { Text, NumberInput, Slider, useMantineTheme, Stack, Space, Title } from '@mantine/core';
+import {
+  Text,
+  NumberInput,
+  Slider,
+  useMantineTheme,
+  Stack,
+  Space,
+  Title,
+  Tooltip,
+  Group,
+} from '@mantine/core';
+import { IconInfoSquare, IconInfoCircle } from '@tabler/icons-react';
 
 function NumberSliderInput({
   value,
@@ -24,8 +35,14 @@ function NumberSliderInput({
   const theme = useMantineTheme();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'left' }}>
-      <Title order={4}>{name}</Title>
-      <Text>{description}</Text>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'left' }}>
+        <Tooltip label={description}>
+          <Group>
+            <Text>{name}</Text>
+            <IconInfoCircle size="1.1rem" stroke={1.5} />
+          </Group>
+        </Tooltip>
+      </div>
       <NumberInput
         name={name}
         value={value}
@@ -35,7 +52,6 @@ function NumberSliderInput({
         step={step}
         variant="filled"
         style={{ width: '100%' }}
-        inputStyle={{ textAlign: 'center' }}
         precision={Math.max(-Math.log10(step), 0)}
         rightSection={<Text size="sm">{unit}</Text>}
       />
@@ -76,7 +92,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.Loyer[0]}
           setValue={stateCalc.Loyer[1]}
           name="Loyer (hors charges)"
-          description="Loyer équivalent, par mois, hors charges, puisqu'on considère qu'elle sont payées par le propiétaire et le locataire"
+          description="Loyer équivalent, par mois, hors charges locatives, puisqu'on considère qu'elle sont payées par le propiétaire et le locataire"
           min={0}
           max={5000}
           step={1}
@@ -89,7 +105,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.Duree[0]}
           setValue={stateCalc.Duree[1]}
           name="Durée"
-          description="Durée"
+          description="Durée de l'emprunt"
           min={0}
           max={50}
           step={1}
@@ -99,7 +115,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.Apport[0]}
           setValue={stateCalc.Apport[1]}
           name="Apport"
-          description="Apport"
+          description="Apport personnel pour l'achat du bien"
           min={0}
           max={1000000}
           step={100}
@@ -109,7 +125,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.Taux[0]}
           setValue={stateCalc.Taux[1]}
           name="Taux d'emprunt"
-          description="Taux de l'emprunt"
+          description="Taux de l'emprunt, hors assurance"
           min={0}
           max={10}
           step={0.01}
@@ -134,7 +150,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           setValue={stateCalc.RendementImmobilier[1]}
           name="Rendement Immobilier"
           description="Croissance du prix du bien immobilier"
-          min={0}
+          min={-5}
           max={10}
           step={0.1}
           unit="%"
@@ -143,7 +159,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.InflationLoyer[0]}
           setValue={stateCalc.InflationLoyer[1]}
           name="Inflation loyer"
-          description="Augmentation du prix du loyer"
+          description="Augmentation des loyers"
           min={0}
           max={10}
           step={0.1}
@@ -163,7 +179,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.InflationFrais[0]}
           setValue={stateCalc.InflationFrais[1]}
           name="Inflation frais"
-          description="Inflation des charges"
+          description="Inflation des charges et de l'entretien annuel"
           min={0}
           max={10}
           step={0.1}
@@ -173,7 +189,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
 
       <div id="charge">
         <Space h="xl" />
-
+        <Title order={3}>Charges supplémentaires pour le propriétaire</Title>
         <NumberSliderInput
           value={stateCalc.TaxeFonciere[0]}
           setValue={stateCalc.TaxeFonciere[1]}
@@ -188,34 +204,34 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.ChargesCopropriete[0]}
           setValue={stateCalc.ChargesCopropriete[1]}
           name="Charges de copropriété"
-          description="Charges de copropriété"
+          description="Charges de copropriété par mois, uniquement pour le propriétaire"
           min={0}
           max={10000}
           step={100}
-          unit="€"
+          unit="€/mois"
         />
         <NumberSliderInput
           value={stateCalc.EntretienAnnuel[0]}
           setValue={stateCalc.EntretienAnnuel[1]}
           name="Entretien annuel"
-          description="Entretien annuel"
+          description="Entretien annuel, renovation, remplacement d'équipement, etc. géneralement supporté par le propriétaire"
           min={0}
           max={10000}
           step={100}
-          unit="€"
+          unit="€/an"
         />
       </div>
 
       <div id="frais">
         <Space h="xl" />
-
+        <Title order={3}>Complément lié à l'achat</Title>
         <NumberSliderInput
           value={stateCalc.FraisGarantie[0]}
           setValue={stateCalc.FraisGarantie[1]}
           name="Frais de garantie"
-          description="Frais de garantie"
+          description="Frais de garantie, caution ou hypothèque. Généralement entre 0.5 et 2% du montant emprunté"
           min={0}
-          max={20}
+          max={5}
           step={0.1}
           unit="%"
         />
@@ -225,7 +241,7 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           name="Frais de notaire"
           description="Frais de notaire"
           min={0}
-          max={20}
+          max={10}
           step={0.1}
           unit="%"
         />
@@ -243,15 +259,15 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           value={stateCalc.FraisDossier[0]}
           setValue={stateCalc.FraisDossier[1]}
           name="Frais de dossier"
-          description="Frais de dossier"
+          description="Frais pour la constitution du dossier auprès de la banque"
           min={0}
           max={10000}
           step={100}
           unit="€"
         />
         <NumberSliderInput
-          value={stateCalc.FraisDossier[0]}
-          setValue={stateCalc.FraisDossier[1]}
+          value={stateCalc.FraisTravaux[0]}
+          setValue={stateCalc.FraisTravaux[1]}
           name="Travaux"
           description="Gros travaux avant emménagement, augmentent la valeur du bien"
           min={0}
@@ -259,15 +275,27 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           step={100}
           unit="€"
         />
+        <Space h="xl" />
+        <Title order={3}>Complément lié à la location</Title>
         <NumberSliderInput
           value={stateCalc.FraisAgenceLocation[0]}
           setValue={stateCalc.FraisAgenceLocation[1]}
-          name="Frais Agence Location"
+          name="Frais d'agence location"
           description="Frais d'agence pour la location (etat des lieux inclus)"
           min={0}
-          max={10}
-          step={0.1}
-          unit="%"
+          max={10000}
+          step={1}
+          unit="€"
+        />
+        <NumberSliderInput
+          value={stateCalc.DepotGarantie[0]}
+          setValue={stateCalc.DepotGarantie[1]}
+          name="Caution"
+          description="Caution en nombre de mois de loyer déposé pour la location"
+          min={0}
+          max={2}
+          step={1}
+          unit="mois"
         />
       </div>
     </Stack>

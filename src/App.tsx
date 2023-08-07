@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   AppShell,
   Navbar,
@@ -16,37 +16,62 @@ import { DataEntry } from './Welcome/DataEntry';
 import { TableOfContentsFloating } from './Welcome/TableOfContents';
 import { Output } from './Welcome/Output';
 
+function get_or_default_from_localstorage(key: string, default_value: number) {
+  if (localStorage.getItem(key) !== null) {
+    return useState(JSON.parse(localStorage.getItem(key) as string));
+  } else {
+    return useState(default_value);
+  }
+}
+
 export default function AppShellDemo() {
   const theme = useMantineTheme();
+
   const [opened, setOpened] = useState(false);
 
   //State variables relating to the rent vs buy simulation
-  const [Prix, setPrix] = useState(150000);
-  const [Loyer, setLoyer] = useState(500);
-  const [Duree, setDuree] = useState(20);
+  const [Prix, setPrix] = get_or_default_from_localstorage('Prix', 150000);
+  const [Loyer, setLoyer] = get_or_default_from_localstorage('Loyer', 500);
+  const [Duree, setDuree] = get_or_default_from_localstorage('Duree', 20);
 
-  const [Apport, setApport] = useState(33000);
-  const [Taux, setTaux] = useState(3);
-  const [Assurance, setAssurance] = useState(0.15);
+  const [Apport, setApport] = get_or_default_from_localstorage('Apport', 0);
+  const [Taux, setTaux] = get_or_default_from_localstorage('Taux', 3);
+  const [Assurance, setAssurance] = get_or_default_from_localstorage('Assurance', 0.3);
 
   //State variables relating to the economic hypotheses
-  const [RendementImmobilier, setRendementImmobilier] = useState(1);
-  const [InflationLoyer, setInflationLoyer] = useState(1);
-  const [RetourAutreInvestissement, setRetourAutreInvestissement] = useState(1);
-  const [InflationFrais, setInflationFrais] = useState(1);
+  const [RendementImmobilier, setRendementImmobilier] = get_or_default_from_localstorage(
+    'RendementImmobilier',
+    1
+  );
+  const [InflationLoyer, setInflationLoyer] = get_or_default_from_localstorage('InflationLoyer', 1);
+  const [RetourAutreInvestissement, setRetourAutreInvestissement] =
+    get_or_default_from_localstorage('RetourAutreInvestissement', 1);
+  const [InflationFrais, setInflationFrais] = get_or_default_from_localstorage('InflationFrais', 1);
 
   //State variables relating to the fees
-  const [FraisNotaire, setFraisNotaire] = useState(7.5);
-  const [FraisAgence, setFraisAgence] = useState(4);
-  const [FraisDossier, setFraisDossier] = useState(100);
-  const [FraisGarantie, setFraisGarantie] = useState(1);
-  const [FraisTravaux, setFraisTravaux] = useState(100);
-  const [FraisAgenceLocation, setFraisAgenceLocation] = useState(7.5);
+  const [FraisNotaire, setFraisNotaire] = get_or_default_from_localstorage('FraisNotaire', 7.5);
+  const [FraisAgence, setFraisAgence] = get_or_default_from_localstorage('FraisAgence', 4);
+  const [FraisDossier, setFraisDossier] = get_or_default_from_localstorage('FraisDossier', 100);
+  const [FraisGarantie, setFraisGarantie] = get_or_default_from_localstorage('FraisGarantie', 100);
+  const [FraisTravaux, setFraisTravaux] = get_or_default_from_localstorage('FraisTravaux', 1000);
+  const [FraisAgenceLocation, setFraisAgenceLocation] = get_or_default_from_localstorage(
+    'FraisAgenceLocation',
+    4
+  );
 
   //Charges : Taxe fonciere, charges de copropriété, entretien annuel
-  const [TaxeFonciere, setTaxeFonciere] = useState(1000);
-  const [ChargesCopropriete, setChargesCopropriete] = useState(100);
-  const [EntretienAnnuel, setEntretienAnnuel] = useState(1600);
+  const [TaxeFonciere, setTaxeFonciere] = get_or_default_from_localstorage('TaxeFonciere', 1000);
+  const [ChargesCopropriete, setChargesCopropriete] = get_or_default_from_localstorage(
+    'ChargesCopropriete',
+    1000
+  );
+  const [EntretienAnnuel, setEntretienAnnuel] = get_or_default_from_localstorage(
+    'EntretienAnnuel',
+    1600
+  );
+
+  //Complément location
+  const [DepotGarantie, setDepotGarantie] = get_or_default_from_localstorage('DepotGarantie', 1);
 
   //Group all the state variables into a single object
   const stateCalc = {
@@ -69,7 +94,51 @@ export default function AppShellDemo() {
     TaxeFonciere: [TaxeFonciere, setTaxeFonciere],
     ChargesCopropriete: [ChargesCopropriete, setChargesCopropriete],
     EntretienAnnuel: [EntretienAnnuel, setEntretienAnnuel],
+    DepotGarantie: [DepotGarantie, setDepotGarantie],
   };
+
+  useEffect(() => {
+    localStorage.setItem('Prix', JSON.stringify(Prix));
+    localStorage.setItem('Loyer', JSON.stringify(Loyer));
+    localStorage.setItem('Duree', JSON.stringify(Duree));
+    localStorage.setItem('Apport', JSON.stringify(Apport));
+    localStorage.setItem('Taux', JSON.stringify(Taux));
+    localStorage.setItem('Assurance', JSON.stringify(Assurance));
+    localStorage.setItem('RendementImmobilier', JSON.stringify(RendementImmobilier));
+    localStorage.setItem('InflationLoyer', JSON.stringify(InflationLoyer));
+    localStorage.setItem('RetourAutreInvestissement', JSON.stringify(RetourAutreInvestissement));
+    localStorage.setItem('InflationFrais', JSON.stringify(InflationFrais));
+    localStorage.setItem('FraisNotaire', JSON.stringify(FraisNotaire));
+    localStorage.setItem('FraisAgence', JSON.stringify(FraisAgence));
+    localStorage.setItem('FraisAgenceLocation', JSON.stringify(FraisAgenceLocation));
+    localStorage.setItem('FraisDossier', JSON.stringify(FraisDossier));
+    localStorage.setItem('FraisGarantie', JSON.stringify(FraisGarantie));
+    localStorage.setItem('FraisTravaux', JSON.stringify(FraisTravaux));
+    localStorage.setItem('TaxeFonciere', JSON.stringify(TaxeFonciere));
+    localStorage.setItem('ChargesCopropriete', JSON.stringify(ChargesCopropriete));
+    localStorage.setItem('EntretienAnnuel', JSON.stringify(EntretienAnnuel));
+    localStorage.setItem('DepotGarantie', JSON.stringify(DepotGarantie));
+  }, [
+    Prix,
+    Loyer,
+    Duree,
+    Apport,
+    Taux,
+    Assurance,
+    RendementImmobilier,
+    InflationLoyer,
+    RetourAutreInvestissement,
+    InflationFrais,
+    FraisNotaire,
+    FraisAgence,
+    FraisAgenceLocation,
+    FraisDossier,
+    FraisGarantie,
+    FraisTravaux,
+    TaxeFonciere,
+    ChargesCopropriete,
+    EntretienAnnuel,
+  ]);
 
   //links to be displayed in the table of contents, conresponding to the different sections of the data entry
   const links = [
@@ -88,11 +157,11 @@ export default function AppShellDemo() {
       }}
       navbarOffsetBreakpoint="sm"
       asideOffsetBreakpoint="sm"
-      navbar={
+      /* navbar={
         <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 250, lg: 250 }}>
           <TableOfContentsFloating links={links}> </TableOfContentsFloating>
         </Navbar>
-      }
+      } */
       aside={
         <Aside p="md" hiddenBreakpoint="sm" width={{ sm: 300, lg: 500 }}>
           <Output stateCalc={stateCalc} />
