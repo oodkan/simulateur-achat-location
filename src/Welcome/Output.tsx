@@ -16,6 +16,9 @@ import {
   Stack,
   Table,
   SimpleGrid,
+  Space,
+  Container,
+  Center,
 } from '@mantine/core';
 import { ResponsiveLine } from '@nivo/line';
 
@@ -43,6 +46,7 @@ type variablesImmo = {
   ChargesCopropriete: number;
   EntretienAnnuel: number;
   DepotGarantie: number;
+  TauxEpargne: number;
 };
 
 export function calculer_mensualite_emprunt(
@@ -111,14 +115,13 @@ function calculer_solution_location(st: variablesImmo) {
   let tresorerie = st.Apport - st.DepotGarantie * st.Loyer;
   tresorerie *= 1 + st.RetourAutreInvestissement / 100;
   tresorerie -= st.FraisAgenceLocation; //Frais d'agence à intégrer
-  tresorerie -= loyer_actuel * 12;
-  tresorerie += revenus_mensuels * 12;
+  tresorerie += (((revenus_mensuels - loyer_actuel) * st.TauxEpargne) / 100) * 12;
   loyer_actuel *= 1 + st.InflationLoyer / 100;
   let actif_net = tresorerie;
   tableau_sortie.push({ year: 1, tresorerie, valeur_immobilier: 0, actif_net });
 
   for (let i = 2; i <= dureeProjection; i++) {
-    tresorerie = tresorerie - loyer_actuel * 12 + revenus_mensuels * 12;
+    tresorerie += (((revenus_mensuels - loyer_actuel) * st.TauxEpargne) / 100) * 12;
     tresorerie *= 1 + st.RetourAutreInvestissement / 100;
     loyer_actuel *= 1 + st.InflationLoyer / 100;
     actif_net = tresorerie + st.DepotGarantie * st.Loyer;
@@ -127,10 +130,10 @@ function calculer_solution_location(st: variablesImmo) {
   return tableau_sortie;
 }
 
-export function calculer_solution_achat(st: variablesImmo) {
+export function calculer_solution_achat(st: variablesImmo, stress: number = 0) {
   //Tableau de sortie
   const tableau_sortie = [];
-  let situation_globale = {};
+  const situation_globale = {};
   let mensualite = 0;
   const montant_emprunt = montant_a_financer(st);
   mensualite = calculer_mensualite_emprunt(montant_emprunt, st.Duree, st.Taux, st.Assurance);
@@ -147,6 +150,7 @@ export function calculer_solution_achat(st: variablesImmo) {
 
   let valeur_immobilier = st.Prix + st.FraisTravaux;
   valeur_immobilier *= 1 + st.RendementImmobilier / 100;
+  valeur_immobilier *= 1 + stress;
 
   tableau_sortie.push({
     year: 1,
@@ -178,30 +182,32 @@ export function calculer_solution_achat(st: variablesImmo) {
 
 function NivoLineFromTabSortie({ data }: { data: any }) {
   return (
-    <ResponsiveLine
-      data={data}
-      margin={{ top: 5, right: 11, bottom: 50, left: 6 }}
-      xScale={{ type: 'point' }}
-      yScale={{
-        type: 'linear',
-        min: 'auto',
-        max: 'auto',
-      }}
-      enablePoints={false}
-      enableGridX={false}
-      yFormat=" >-.3s"
-      axisTop={null}
-      axisRight={null}
-      axisLeft={null}
-      pointSize={10}
-      pointColor={{ theme: 'background' }}
-      pointBorderWidth={2}
-      pointBorderColor={{ from: 'serieColor' }}
-      pointLabelYOffset={-12}
-      useMesh
-      enableSlices="x"
-      animate={false}
-    />
+    <Container h={225}>
+      <ResponsiveLine
+        data={data}
+        margin={{ top: 5, right: 11, bottom: 50, left: 6 }}
+        xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
+        yScale={{
+          type: 'linear',
+          min: 'auto',
+          max: 'auto',
+        }}
+        enablePoints={false}
+        enableGridX={false}
+        yFormat=" >-.3s"
+        axisTop={null}
+        axisRight={null}
+        axisLeft={null}
+        pointSize={10}
+        pointColor={{ theme: 'background' }}
+        pointBorderWidth={2}
+        pointBorderColor={{ from: 'serieColor' }}
+        pointLabelYOffset={-12}
+        useMesh
+        enableSlices="x"
+        animate={false}
+      />
+    </Container>
   );
 }
 
@@ -221,7 +227,7 @@ function stateCalcToValue({ stateCalc }: { stateCalc: any }) {
 
 function TableLocation({ st }: { st: variablesImmo }) {
   const loyer_annuel = st.Loyer * 12;
-  const frais_agence_location = (st.FraisAgenceLocation / 100) * loyer_annuel;
+  const loyer_20 = st.Loyer * (1 + st.InflationLoyer / 100) ** 20;
   const rentabilite = loyer_annuel / (st.Prix + st.FraisTravaux);
 
   return (
@@ -230,14 +236,22 @@ function TableLocation({ st }: { st: variablesImmo }) {
         Loyer annuel
       </Text>
       <Text fz="xs" fw={700} c="dimmed">
-        {loyer_annuel.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+        {loyer_annuel.toLocaleString('fr-FR', {
+          style: 'currency',
+          currency: 'EUR',
+          maximumFractionDigits: 0,
+        })}
       </Text>
 
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
-        Frais Agence
+        Loyer mensuel dans 20 ans
       </Text>
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
-        {frais_agence_location.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+        {loyer_20.toLocaleString('fr-FR', {
+          style: 'currency',
+          currency: 'EUR',
+          maximumFractionDigits: 0,
+        })}
       </Text>
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
         Rentabilité locative
@@ -252,24 +266,76 @@ function TableLocation({ st }: { st: variablesImmo }) {
 function TableAchat({ st }: { st: variablesImmo }) {
   const montant_emprunt = montant_a_financer(st);
   const mensualite = calculer_mensualite_emprunt(montant_emprunt, st.Duree, st.Taux, st.Assurance);
+  const taux_apport = st.Apport / (st.Prix + st.FraisTravaux);
   return (
     <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
         Mensualité
       </Text>
       <Text fz="xs" fw={700} c="dimmed">
-        {mensualite.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+        {mensualite.toLocaleString('fr-FR', {
+          style: 'currency',
+          currency: 'EUR',
+          maximumFractionDigits: 0,
+        })}
       </Text>
 
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
         Montant à emprunter
       </Text>
       <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
-        {montant_emprunt.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+        {montant_emprunt.toLocaleString('fr-FR', {
+          style: 'currency',
+          currency: 'EUR',
+          maximumFractionDigits: 0,
+        })}
+      </Text>
+
+      <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
+        Taux apport personnel
+      </Text>
+      <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
+        {taux_apport.toLocaleString('fr-FR', { style: 'percent', maximumFractionDigits: 0 })}
       </Text>
     </SimpleGrid>
   );
 }
+
+function calcul_annee_rentable(tab_achat: any, tab_location: any) {
+  let annee_rentable = 0;
+  for (let i = 0; i < tab_achat.length; i++) {
+    if (tab_achat[i].actif_net > tab_location[i].actif_net) {
+      annee_rentable = i + 1;
+      break;
+    }
+  }
+
+  return annee_rentable;
+}
+
+//Calcul de la rentabilité en fonction du stress
+function calcul_annee_rentable_stress(st: variablesImmo, tab_location: any, stress: number) {
+  const tab_achat_stress = calculer_solution_achat(st, stress);
+  let annee_rentable = 0;
+  for (let i = 0; i < tab_achat_stress.length; i++) {
+    if (tab_achat_stress[i].actif_net > tab_location[i].actif_net) {
+      annee_rentable = i + 1;
+      break;
+    }
+  }
+  return annee_rentable;
+}
+
+//Retourne un tableau avec les valeurs de rentabilité en fonction du stress
+function calcul_annee_rentable_stress_tab(st: variablesImmo, tab_location: any) {
+  const tab_annee_rentable = [];
+  for (let stress = -0.3; stress <= 0.3; stress += 0.01) {
+    const annee_rentable = calcul_annee_rentable_stress(st, tab_location, stress);
+    tab_annee_rentable.push({ x: stress, y: annee_rentable });
+  }
+  return tab_annee_rentable;
+}
+
 export function Output({ stateCalc }: { stateCalc: any }) {
   //Menualite emprunt
   const st = stateCalcToValue({ stateCalc });
@@ -295,32 +361,48 @@ export function Output({ stateCalc }: { stateCalc: any }) {
   ];
 
   //Année ou l'achat devient plus rentable que la location
-  let annee_rentable = 0;
-  for (let i = 0; i < tab_achat.length; i++) {
-    if (tab_achat[i].actif_net > tab_location[i].actif_net) {
-      annee_rentable = i + 1;
-      break;
-    }
-  }
+  const annee_rentable = calcul_annee_rentable(tab_achat, tab_location);
   let annee_rentable_text = '';
   if (annee_rentable === 0) {
     annee_rentable_text = "L'achat devient rentable au dela de 50 ans";
   } else {
-    annee_rentable_text = `L'achat devient plus rentable en ${annee_rentable} ans`;
+    annee_rentable_text = `L'achat devient rentable en ${annee_rentable} ans`;
   }
+
+  //Calcul de rentabilité en fonction du stress
+  //Calculer du nombre d'année supplémentaire à attendre pour que l'achat soit rentable
+  const annee_rentable_stress_10 = calcul_annee_rentable_stress(st, tab_location, -0.1);
+  const annee_rentable_stress_20 = calcul_annee_rentable_stress(st, tab_location, -0.2);
+  const annee_rentable_stress_30 = calcul_annee_rentable_stress(st, tab_location, -0.3);
+
+  const annee_rentable_stress_10_text = `Avec une baisse de 10%, il faut attendre ${
+    annee_rentable_stress_10 - annee_rentable
+  } ans de plus`;
+  const annee_rentable_stress_20_text = `Avec une baisse de 20%, il faut attendre ${
+    annee_rentable_stress_20 - annee_rentable
+  } ans de plus`;
+  const annee_rentable_stress_30_text = `Avec une baisse de 30%, il faut attendre ${
+    annee_rentable_stress_30 - annee_rentable
+  } ans de plus`;
+  const tab_stress = calcul_annee_rentable_stress_tab(st, tab_location);
+  const data_stress = [
+    {
+      id: 'Stress',
+      data: tab_stress,
+    },
+  ];
 
   return (
     <Stack
       justify="flex-start"
-      h={500}
       sx={(theme) => ({
-        backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+        backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.white,
       })}
     >
       <Card
         withBorder
         radius="md"
-        padding="xl"
+        padding="md"
         sx={(theme) => ({
           backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
         })}
@@ -328,13 +410,14 @@ export function Output({ stateCalc }: { stateCalc: any }) {
         <Text fz="md" tt="uppercase" fw={700}>
           Location
         </Text>
+        <Space h="xs" />
         <TableLocation st={st} />
       </Card>
 
       <Card
         withBorder
         radius="md"
-        padding="xl"
+        padding="md"
         sx={(theme) => ({
           backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
         })}
@@ -342,24 +425,31 @@ export function Output({ stateCalc }: { stateCalc: any }) {
         <Text fz="md" tt="uppercase" fw={700}>
           Achat
         </Text>
+        <Space h="xs" />
         <TableAchat st={st} />
       </Card>
 
       <Card
         withBorder
         radius="md"
-        padding="xl"
+        padding="md"
         sx={(theme) => ({
           backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
         })}
       >
-        <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
+        <Text fz="md" tt="uppercase" fw={700}>
           Rentabilite achat
         </Text>
-        <Text fz="lg" fw={700}>
+        <Text fz="md" fw={700} c="dimmed">
           {annee_rentable_text}
         </Text>
         <NivoLineFromTabSortie data={data} />
+        <Text fz="md" fw={600} c="dimmed">
+          {annee_rentable_stress_10_text}
+        </Text>
+        <Text fz="md" fw={600} c="dimmed">
+          {annee_rentable_stress_30_text}
+        </Text>
       </Card>
     </Stack>
   );

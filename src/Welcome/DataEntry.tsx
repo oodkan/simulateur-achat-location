@@ -101,13 +101,14 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
       </div>
       <div id="emprunt">
         <Space h="xl" />
+        <Title order={3}>Emprunt immobilier</Title>
         <NumberSliderInput
           value={stateCalc.Duree[0]}
           setValue={stateCalc.Duree[1]}
           name="Durée"
           description="Durée de l'emprunt"
           min={0}
-          max={50}
+          max={30}
           step={1}
           unit="ans"
         />
@@ -137,14 +138,14 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           name="Taux assurance"
           description="Taux d'assurance"
           min={0}
-          max={10}
+          max={2}
           step={0.01}
           unit="%"
         />
       </div>
       <div id="hypoeco">
         <Space h="xl" />
-
+        <Title order={3}>Hypothèses économiques</Title>
         <NumberSliderInput
           value={stateCalc.RendementImmobilier[0]}
           setValue={stateCalc.RendementImmobilier[1]}
@@ -296,6 +297,16 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           max={2}
           step={1}
           unit="mois"
+        />
+        <NumberSliderInput
+          value={stateCalc.TauxEpargne[0]}
+          setValue={stateCalc.TauxEpargne[1]}
+          name="Taux d'épargne"
+          description="Pourcentage de la différence entre loyer et mensualité de l'emprunt qui est épargnée (et pas dépensée). L'achat peut être considéré comme un moyen d'épargne forcée par certains."
+          min={0}
+          max={100}
+          step={1}
+          unit="%"
         />
       </div>
     </Stack>
