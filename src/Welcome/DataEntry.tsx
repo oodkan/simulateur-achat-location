@@ -207,8 +207,8 @@ export function DataEntry({ stateCalc }: { stateCalc: any }) {
           name="Charges de copropriété"
           description="Charges de copropriété par mois, uniquement pour le propriétaire"
           min={0}
-          max={10000}
-          step={100}
+          max={1000}
+          step={10}
           unit="€/mois"
         />
         <NumberSliderInput

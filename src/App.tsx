@@ -43,12 +43,15 @@ export default function AppShellDemo() {
   //State variables relating to the economic hypotheses
   const [RendementImmobilier, setRendementImmobilier] = get_or_default_from_localstorage(
     'RendementImmobilier',
-    1
+    2
   );
-  const [InflationLoyer, setInflationLoyer] = get_or_default_from_localstorage('InflationLoyer', 1);
+  const [InflationLoyer, setInflationLoyer] = get_or_default_from_localstorage(
+    'InflationLoyer',
+    2.5
+  );
   const [RetourAutreInvestissement, setRetourAutreInvestissement] =
-    get_or_default_from_localstorage('RetourAutreInvestissement', 1);
-  const [InflationFrais, setInflationFrais] = get_or_default_from_localstorage('InflationFrais', 1);
+    get_or_default_from_localstorage('RetourAutreInvestissement', 3);
+  const [InflationFrais, setInflationFrais] = get_or_default_from_localstorage('InflationFrais', 2);
 
   //State variables relating to the fees
   const [FraisNotaire, setFraisNotaire] = get_or_default_from_localstorage('FraisNotaire', 7.5);
