@@ -12,10 +12,9 @@ import {
   Code,
   ScrollArea,
 } from '@mantine/core';
+import { IconMath } from '@tabler/icons-react';
 import { ThemeProvider } from './ThemeProvider';
-import { Welcome } from './Welcome/Welcome';
 import { DataEntry } from './Welcome/DataEntry';
-import { TableOfContentsFloating } from './Welcome/TableOfContents';
 import { Output } from './Welcome/Output';
 
 function get_or_default_from_localstorage(key: string, default_value: number) {
@@ -190,7 +189,7 @@ export default function AppShellDemo() {
                 onClick={() => setOpened((o) => !o)}
                 size="sm"
                 color={theme.colors.gray[6]}
-                mr="xl"
+                mr="sm"
               />
             </MediaQuery>
           </div>

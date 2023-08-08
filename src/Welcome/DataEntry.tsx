@@ -36,7 +36,7 @@ function NumberSliderInput({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'left' }}>
       <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'left' }}>
-        <Tooltip label={description}>
+        <Tooltip label={description} events={{ hover: true, focus: true, touch: true }}>
           <Group>
             <Text>{name}</Text>
             <IconInfoCircle size="1.1rem" stroke={1.5} />
