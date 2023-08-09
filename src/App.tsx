@@ -11,11 +11,14 @@ import {
   useMantineTheme,
   Code,
   ScrollArea,
+  Button,
+  Group,
 } from '@mantine/core';
 import { IconMath } from '@tabler/icons-react';
 import { ThemeProvider } from './ThemeProvider';
 import { DataEntry } from './Welcome/DataEntry';
 import { Output } from './Welcome/Output';
+import { BUTTON_VARIANTS } from '@mantine/core/lib/Button/Button.styles';
 
 function get_or_default_from_localstorage(key: string, default_value: number) {
   if (localStorage.getItem(key) !== null) {
@@ -180,19 +183,20 @@ export default function AppShellDemo() {
       }
       header={
         <Header height={{ base: 50, md: 70 }} p="md">
-          <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Group>
             <Text>Simulateur Achat Location</Text>
             <Code sx={{ fontWeight: 700 }}>v1.1</Code>
             <MediaQuery largerThan="sm" styles={{ display: 'none', alignItems: 'right' }}>
-              <Burger
-                opened={opened}
+              <Button
                 onClick={() => setOpened((o) => !o)}
-                size="sm"
-                color={theme.colors.gray[6]}
-                mr="sm"
-              />
+                size="xs"
+                color={opened ? 'red' : 'blue'}
+              >
+                {' '}
+                {opened ? 'Fermer' : 'Résultats'}{' '}
+              </Button>
             </MediaQuery>
-          </div>
+          </Group>
         </Header>
       }
     >

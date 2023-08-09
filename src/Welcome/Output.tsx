@@ -316,7 +316,7 @@ function calcul_annee_rentable(tab_achat: any, tab_location: any) {
 //Calcul de la rentabilité en fonction du stress
 function calcul_annee_rentable_stress(st: variablesImmo, tab_location: any, stress: number) {
   const tab_achat_stress = calculer_solution_achat(st, stress);
-  let annee_rentable = 0;
+  let annee_rentable = 50;
   for (let i = 0; i < tab_achat_stress.length; i++) {
     if (tab_achat_stress[i].actif_net > tab_location[i].actif_net) {
       annee_rentable = i + 1;
@@ -438,7 +438,7 @@ export function Output({ stateCalc }: { stateCalc: any }) {
         })}
       >
         <Text fz="md" tt="uppercase" fw={700}>
-          Rentabilite achat
+          Patrimoine
         </Text>
         <Text fz="md" fw={700} c="dimmed">
           {annee_rentable_text}
